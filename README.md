@@ -40,7 +40,7 @@ stedi-spark
 ```
 
 ## Implementation:
-### Configure AWS environment using AWS CLI/cloudshell:
+### Configuration of AWS environment using AWS CLI/cloudshell:
 
 Create S3 gateway endpoint:
 ```
@@ -63,7 +63,7 @@ $ aws iam create-role --role-name my-glue-service-role --assume-role-policy-docu
 }'
 ```
 
-Grant AWS Glue privileges to access S3 & other resources:
+Grant AWS Glue privileges to access S3 bucket:
 ```
 $ aws iam put-role-policy --role-name my-glue-service-role --policy-name S3Access --policy-document '{
     "Version": "2012-10-17",
@@ -94,8 +94,8 @@ $ aws iam put-role-policy --role-name my-glue-service-role --policy-name S3Acces
 
 ### Upload data to S3 bucket (landing zone):
 - Download/clone the repository with the project data (accelerometer, customer, step trainer)
-- Create a new S3 bucket (ex. $ aws s3 mb s3://abreu-stedi --region us-east-1)
-- Copy individually the JSON data of the 3 categories to the new S3 bucket, creating a sub-folder "landing" in each of the 3 different locations (ex. bucket path: s3://abreu-stedi/accelerometer/landing/)
+- Create a new S3 bucket (ex. **$ aws s3 mb s3://abreu-stedi --region us-east-1**)
+- Copy individually the JSON data of the 3 categories to the new S3 bucket, creating a sub-folder "landing" for each of the 3 different locations (ex. bucket path: **s3://abreu-stedi/accelerometer/landing/**).
 
 ---
 
@@ -111,7 +111,7 @@ A Glue database allows us to manage the data directly from the S3 bucket.
 
 ---
 
-### Create the following Glue tables using Athena & inspect the raw data in landing zone:
+### Generation of the following Glue tables using Athena & inspection of raw data in landing zone:
 ![tables](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/tables.png)
 
 #### Schema & data types of Glue tables in landing zone:
@@ -142,17 +142,16 @@ A Glue database allows us to manage the data directly from the S3 bucket.
 
 ![step_land_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/step_trainer_preview_preview.png)
 
-##### The [sql](https://github.com/abreufreire/stedi-spark-datalake/tree/master/sql/) folder contains the source code (DDL) to create each of the tables.
+#### The [sql](https://github.com/abreufreire/stedi-spark-datalake/tree/master/sql/) folder contains the source code (DDL) to create each of the tables.
 
 ---
 
-### Spark/Glue jobs to ETL data between landing, trusted, and curated zones:
-Using Glue Studio to build ETL jobs that extract, transform, and load the data from the origin (using source type: **Data source - Data Catalog**), 
+### Building Spark/Glue jobs to ETL data between landing, trusted, and curated zones:
+Use Glue Studio to build ETL jobs that extract, transform, and load the data from the origin (using source type: **Data source - Data Catalog**), 
 transform/munge/clean/filter the data using **SQL**, and loading it into the target **S3 bucket**. 
 
-The following Glue jobs were created:
+**The following Glue jobs were created:**
 ![glue_jobs](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/glue_jobs.png)
-
 
 ##### The [src](https://github.com/abreufreire/stedi-spark-datalake/tree/master/src/) folder contains the source code (python) to create each of the Glue jobs. The name of each file is self-explanatory.
 
