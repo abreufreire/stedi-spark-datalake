@@ -11,8 +11,9 @@ For this job we have adopted:
 Python and Spark, Glue, Athena, and S3.
 
 ## Project workflow & stack:
-![flowchart](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/flowchart.png)
-![aws_pipeline](https://raw.githubusercontent.com/abreufreire/sparkify-spark/master/graphics/aws_pipeline.png)
+![flowchart](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/flowchart.png)
+
+![aws_pipeline](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/aws_pipeline.png)
 
 ## Datasets (source):
 - Customer Records: s3://cd0030bucket/customers/
@@ -89,59 +90,94 @@ $ aws iam put-role-policy --role-name my-glue-service-role --policy-name S3Acces
 }'
 ```
 
+---
+
 ### Upload data to S3 bucket (landing zone):
 - Download/clone the repository with the project data (accelerometer, customer, step trainer)
 - Create a new S3 bucket (ex. $ aws s3 mb s3://abreu-stedi --region us-east-1)
 - Copy individually the JSON data of the 3 categories to the new S3 bucket, creating a sub-folder "landing" in each of the 3 different locations (ex. bucket path: s3://abreu-stedi/accelerometer/landing/)
 
-### Create a Glue database to manage the data directly from the S3 bucket (using Data Catalog or AWS CLI):
+---
+
+### Create a Glue database (using Data Catalog or AWS CLI):
 ```
 $ aws glue create-database --database-input '{"Name": "stedi-lake"}'
 ```
+A Glue database allows us to manage the data directly from the S3 bucket. 
 
-### Inspect raw data in landing zone & create the following Glue tables using Athena:
-![tables](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/tables.png)
-![acc_landing_schema](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/acc_landing_schema.png)
-![cus_landing_schema](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/cus_landing_schema.png)
-![step_landing_schema](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/step_landing_schema.png)
+---
 
-#### Analyze Glue tables data in landing zone using SQL/Athena:
+#### <span style="color:blue;">Disclosure: The results of each operation are summarized & presented as graphics. The source code of Glue tables & Glue ETL jobs are included in the project folders.</span>
+
+---
+
+### Create the following Glue tables using Athena & inspect the raw data in landing zone:
+![tables](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/tables.png)
+
+#### Schema & data types of Glue tables in landing zone:
+![acc_landing_schema](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/acc_landing_schema.png)
+
+![cus_landing_schema](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/cus_landing_schema.png)
+
+![step_landing_schema](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/step_landing_schema.png)
+
+---
+
+### Analysis of Glue tables data in LANDING zone using SQL/Athena:
 ###### Accelerometer:
-![acc_land](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/accelerometer_landing.png)
-![acc_land_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/accelerometer_landing_preview.png)
+![acc_land](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/accelerometer_landing.png)
+
+![acc_land_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/accelerometer_landing_preview.png)
+
 ###### Customer:
-![cus_land](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/customer_landing.png)
-![cus_land_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/customer_landing_preview.png)
-Check the data which shared with research consensus was given by customers:
-![cus_land_priv](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/customer_landing_to_trusted_test.png)
+![cus_land](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/customer_landing.png)
+
+![cus_land_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/customer_landing_preview.png)
+
+**Filter the data that can be used for research/analytics (customers gave their consensus):**
+![cus_land_priv](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/customer_landing_to_trusted_test.png)
+
 ###### Step trainer:
-![step_land](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/step_trainer_landing.png)
-![step_land_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/landing/step_trainer_preview_preview.png)
+![step_land](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/step_trainer_landing.png)
 
-##### The [SQL folder](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/sql/) contains the source code (DDL) to create each of the tables.
+![step_land_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/landing/step_trainer_preview_preview.png)
 
-### Spark/Glue jobs to transform data in landing zone to data in trusted zone, and then to transform data in the trusted zone to data in curated zone:
-Use Glue Studio to build ETL jobs that extract, transform, and load the JSON data from the source (S3 bucket) using the type: **Data source - Data Catalog**, transforming/munging/cleaning/filtering that data using **SQL**, and loading it into a **S3 bucket**. 
-The following jobs were created: 
-![glue_jobs](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/glue_jobs.png)
+##### The [sql](https://github.com/abreufreire/stedi-spark-datalake/tree/master/sql/) folder contains the source code (DDL) to create each of the tables.
+
+---
+
+### Spark/Glue jobs to ETL data between landing, trusted, and curated zones:
+Using Glue Studio to build ETL jobs that extract, transform, and load the data from the origin (using source type: **Data source - Data Catalog**), 
+transform/munge/clean/filter the data using **SQL**, and loading it into the target **S3 bucket**. 
+
+The following Glue jobs were created:
+![glue_jobs](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/glue_jobs.png)
 
 
-##### The [src folder](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/src/) contains the source code (python) to create each of the Glue jobs. The name of each file is self-explanatory.
+##### The [src](https://github.com/abreufreire/stedi-spark-datalake/tree/master/src/) folder contains the source code (python) to create each of the Glue jobs. The name of each file is self-explanatory.
 
-####  Investigate Glue tables data in trusted zone using SQL/Athena:
+---
+
+###  Investigation of Glue tables data in TRUSTED zone using SQL/Athena:
 ###### Accelerometer:
-![acc_trusted](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/trusted/accelerometer_trusted.png)
-###### Customer:
-![cus_trusted](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/trusted/customer_trusted.png)
-![cus_trusted_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/trusted/customer_trusted_preview.png)
-###### Step trainer:
-![step_trusted](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/trusted/step_trainer_trusted.png)
-ETL showing accelerometer and step trainer readings in trusted area being transformed (aggregated) and then organized into a glue table **machine_learning_curated** in the curated zone. 
-![glue_etl](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/trusted/glue_etl.png)
+![acc_trusted](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/trusted/accelerometer_trusted.png)
 
-####  Inspect Glue tables data in curated zone using SQL/Athena:
 ###### Customer:
-![cus_curated](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/curated/customer_curated.png)
+![cus_trusted](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/trusted/customer_trusted.png)
+
+![cus_trusted_prev](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/trusted/customer_trusted_preview.png)
+
+###### Step trainer:
+![step_trusted](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/trusted/step_trainer_trusted.png)
+
+**ETL showing accelerometer and step trainer readings in trusted area being transformed (aggregated) into a glue table **machine_learning_curated** in the curated zone.**
+![glue_etl](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/trusted/glue_etl.png)
+
+---
+
+###  Inspection of Glue tables data in CURATED zone using SQL/Athena:
+###### Customer:
+![cus_curated](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/curated/customer_curated.png)
 
 ###### Machine learning (step trainer aggregated with accelerometer):
-![m_l_curated](https://raw.githubusercontent.com/abreufreire/stedi-spark/master/graphics/curated/machine_learning_curated.png)
+![m_l_curated](https://raw.githubusercontent.com/abreufreire/stedi-spark-datalake/master/graphics/curated/machine_learning_curated.png)
